@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.3.0">
+<eagle version="6.5.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -12291,9 +12291,9 @@ straight</description>
 <label x="228.6" y="-22.86" size="1.778" layer="95"/>
 <pinref part="IC3" gate="G$1" pin="(MOSI)PB5"/>
 <wire x1="226.06" y1="-22.86" x2="269.24" y2="-22.86" width="0.1524" layer="91"/>
-<pinref part="JP3" gate="G$1" pin="4"/>
-<wire x1="271.78" y1="-12.7" x2="264.16" y2="-12.7" width="0.1524" layer="91"/>
-<wire x1="269.24" y1="-22.86" x2="264.16" y2="-12.7" width="0.1524" layer="91"/>
+<wire x1="269.24" y1="-22.86" x2="269.24" y2="-15.24" width="0.1524" layer="91"/>
+<pinref part="JP3" gate="G$1" pin="1"/>
+<wire x1="269.24" y1="-15.24" x2="271.78" y2="-15.24" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <wire x1="48.26" y1="38.1" x2="58.42" y2="38.1" width="0.1524" layer="91"/>
@@ -12455,11 +12455,11 @@ straight</description>
 </net>
 <net name="N$20" class="0">
 <segment>
+<pinref part="JP3" gate="G$1" pin="4"/>
+<wire x1="271.78" y1="-12.7" x2="264.16" y2="-12.7" width="0.1524" layer="91"/>
+<wire x1="264.16" y1="-12.7" x2="264.16" y2="-20.32" width="0.1524" layer="91"/>
 <pinref part="IC3" gate="G$1" pin="(MISO)PB6"/>
 <wire x1="264.16" y1="-20.32" x2="226.06" y2="-20.32" width="0.1524" layer="91"/>
-<pinref part="JP3" gate="G$1" pin="1"/>
-<wire x1="269.24" y1="-15.24" x2="271.78" y2="-15.24" width="0.1524" layer="91"/>
-<wire x1="264.16" y1="-20.32" x2="269.24" y2="-15.24" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$9" class="0">
