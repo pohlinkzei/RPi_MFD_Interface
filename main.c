@@ -61,15 +61,29 @@ void pi_shutdown_init(void){
 void pi_shutdown_task(void){
 	if(!(PISTARTPORT & (1<<PISTART))) return; // pi ausgeschaltet? dann zurück!
 	//pi herunterfahren
+	if(PIPORT & (1<<PISHUTDOWN)){
+		// pi hat shutdown signal bekommen: ist er schon aus?
+		if(PIPIN & (1<<PIACTIVE)){
+			//noch an... da machen wir nix.
+			return;
+		}
+		//hier isser schon aus.
+		PIPORT &= ~(1<<PISHUTDOWN);
+		_delay_ms(10000);//sicherheit
+		PISTARTPORT &= ~(1<<PISTART);// und abschalten
+	}else{
+		// pi ist an - soll jetzt abgeschaltet werden
+		PIPORT |= (1<<PISHUTDOWN);
+	}
+	
+	// ist der pi 30s inaktiv und fertig, kann er herunter gefahren werden.
+	/*
 	if(PIPIN & (1<<PIACTIVE)) return; // wenn der pi noch aktiv ist, wird nicht heruntergefahren
 	//ab hier ist der pi inaktiv - mp3player aus (idle)
 	if(!(PIPIN & (1<<PIREADY))){ //solange der pi noch nicht fertig ist, passiert nichts
  		pi_shutdown_count = 0;
  		return;
 	}
-	// falls per zv gestartet wurde, erst nach frühestens 10min wieder runter fahren
-	//if(ZV_count == 0){
-	// ist der pi 30s inaktiv und fertig, kann er herunter gefahren werden.
 		if(pi_shutdown_count > 10000){
 			PIPORT |= (1<<PISHUTDOWN);
 			_delay_ms(10000);
@@ -80,6 +94,7 @@ void pi_shutdown_task(void){
 			_delay_ms(10000);//sicherheit
 			PISTARTPORT &= ~(1<<PISTART);// und abschalten
 		}
+		//*/
 	//}
 }
 
@@ -146,10 +161,10 @@ void start_pi(void){
 		_delay_ms(100);
 		PISTARTPORT |= (1<<PISTART);
 		_delay_ms(10000);
-		while(!(PIPIN & (1<<PIACTIVE))){
-			if(shutdown_irq) break;
-		}
-		_delay_ms(200);
+		//while(!(PIPIN & (1<<PIACTIVE))){
+		//	if(shutdown_irq) break;
+		//}
+		//_delay_ms(200);
 		sei();
 	}	
 }
@@ -295,17 +310,18 @@ int main(void){
 				mfd_active = true;
 				//ZV_count = 0;
 			}else{
-				if(ZV_PIN & (1<<ZV_ZU)){//zv ist zu. pi kann runter gefahren werden
-					mfd_active = false;
-				}else{
-					start_pi();
-					mfd_active = true;
-					USART_Transmit(0x02);
-					_delay_ms(250);
-				}
+				pi_shutdown_task();
+// 				if(ZV_PIN & (1<<ZV_ZU)){//zv ist zu. pi kann runter gefahren werden
+// 					mfd_active = false;
+// 				}else{
+// 					start_pi();
+// 					mfd_active = true;
+// 					USART_Transmit(0x02);
+// 					_delay_ms(250);
+// 				}
 			}
 			mfd_active_check();				
-			pi_shutdown_task();
+			//pi_shutdown_task();
 			
 			buttons_active = false;
 		}
@@ -315,17 +331,7 @@ int main(void){
 			buttons_active = true;
 		}	
 		//*/
-		/*
-		if(ready_3lb){
-			uint8_t i = 0;
-			USART_Transmit(count_3lb);
-			for(;i<20;i++){
-				USART_Transmit(data_3lb[i]);
-			}
-			USART_Transmit(count_3lb_max);
-			ready_3lb = false;
-		}	
-		//*/				
+				
     }
 	return 0;
 }
@@ -333,20 +339,6 @@ int main(void){
 ISR(TIMER1_COMPA_vect){// 1ms Timer
 	pi_start_count++;
 	pi_shutdown_count++;
-	/*if((!(ZV_PIN & (1<<ZV_ZU))) && (ZV_count > 0)){
-		ZV_count--;
-	}else{
-		ZV_count = 0;
-	}
-	if(ZV_count > 7000000) ZV_count = 0;*/
-	BUTTON_DDR |= (1<<BUTTON_VERKEHR);
-// 	if(!(BUTTON_PIN & (1<<BUTTON_VERKEHR)) && !(PIPIN & (1<<PIREADY)) && !(PIPIN & (1<<PIACTIVE))){
-// 		//__asm__ volatile ("rjmp reset");//reset();
-// 		shutdown_irq = true;
-// 		mfd_active = true;
-// 		pi_shutdown_count = 0;
-// 	}
-	BUTTON_DDR &= ~(1<<BUTTON_VERKEHR);
 	mp_cnt++;
 	if(mp_cnt == 100){
 		mp_cnt = 0;

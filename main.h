@@ -36,10 +36,10 @@
 #define PISTART PD6 
 
 #define ZV_PIN	PIND
-#define ZV_ZU	PB2
+#define ZV_ZU	PD2
 
 #define AMP_PIN PIND
-#define AMP_ON PB3
+#define AMP_ON PD3
 
 // cool Pi
 #define PWM OCR2
