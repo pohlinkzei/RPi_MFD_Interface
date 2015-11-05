@@ -71,6 +71,7 @@ void pi_shutdown_task(void){
 		PIPORT &= ~(1<<PISHUTDOWN);
 		_delay_ms(10000);//sicherheit
 		PISTARTPORT &= ~(1<<PISTART);// und abschalten
+		_delay_ms(10000);//sicherheit
 	}else{
 		// pi ist an - soll jetzt abgeschaltet werden
 		PIPORT |= (1<<PISHUTDOWN);
@@ -157,10 +158,13 @@ void start_pi(void){
 	// starte den pi und warte (!) bis er hochgefahren ist. Blockierend.
 	if(!(PISTARTPORT & (1<<PISTART))){ 
 		cli();
+		int i = 0;
 		PIPORT &= ~(1<<PISHUTDOWN);
 		_delay_ms(100);
 		PISTARTPORT |= (1<<PISTART);
-		_delay_ms(10000);
+		for(;i<30;i++){
+			_delay_ms(1000);
+		}		
 		//while(!(PIPIN & (1<<PIACTIVE))){
 		//	if(shutdown_irq) break;
 		//}
@@ -283,6 +287,7 @@ int main(void){
 		//*
 		if(buttons_active){
 			if(AMP_PIN & (1<<AMP_ON)){
+				start_pi();
 				switch(aux_check()){
 					case AUX:{
 						buttons_task();
@@ -320,7 +325,7 @@ int main(void){
 // 					_delay_ms(250);
 // 				}
 			}
-			mfd_active_check();				
+			//mfd_active_check();				
 			//pi_shutdown_task();
 			
 			buttons_active = false;
@@ -451,10 +456,14 @@ ISR(SPI_STC_vect){
 }
 //ISR( TIMER0_COMP_vect )// 1ms for manual movement
 
-ISR(USART_RXC_vect){
+ISR(USART_RXC_vect){/*
 	uint8_t data = UDR;
 	if(data == 0xFF){
 		shutdown_irq = true;
-		mfd_active = true;
-	}
+		//mfd_active = true;
+	}*/
+}
+
+ISR(INT0_vect){
+	;
 }
