@@ -27,6 +27,8 @@
 #include "buttons.h"
 #include "rotary.h"
 
+#define WAIT 5
+
 extern volatile buttons_t buttons, buttons_old, buttons_vold;
 volatile bool mfd_active = false;
 volatile uint16_t pi_shutdown_count = 0;
@@ -185,14 +187,19 @@ void uart_task(){
 	if(buttons_old.left_right){
 		int8_t c = buttons_old.left_right;
 		if(c > 0){
+			
 			while(c--){
 				USART_Transmit('+');
+				_delay_ms(WAIT);
 				USART_Transmit('0');
+				_delay_ms(WAIT);
 			}
 		}else{
 			while(c++){
 				USART_Transmit('-');
+				_delay_ms(WAIT);
 				USART_Transmit('0');
+				_delay_ms(WAIT);
 			}							
 		}
 	}	
@@ -213,7 +220,7 @@ uint8_t aux_check(void){
 	// [  AUX            ] 
 	// [  AUX          TP]
 	// [  AUX    INFO  TP]
-	
+	//return AUX;
 	//if(ready_3lb){
 		if(strncmp( (char*) &data_3lb[1], "  AUX   ", 8) == 0){
 			if(strncmp( (char*) &data_3lb[9], "INFO  TP", 8) == 0){

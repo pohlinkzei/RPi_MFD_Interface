@@ -125,6 +125,7 @@ void buttons_task(void){
 		mfd_active = true;
 	}else if(buttons_d < UPPER2V6 && buttons_d > LOWER2V6){
 		buttons.back = true;
+		mfd_active = true;
 		//_delay_ms(5000);
 		//buttons_init();
 		//mfd_active = false;
@@ -136,6 +137,7 @@ void buttons_task(void){
 		buttons._6 = true;
 		mfd_active = true;
 	}else if(buttons_d < LOWER0V9){
+		
 		//_delay_ms(5000);
 		//buttons_init();
 		//mfd_active = false;
@@ -151,7 +153,7 @@ void buttons_task(void){
 		buttons._4 = false;
 		buttons._5 = false;
 		//buttons. = false; VERKEHR
-	}else if(buttons_e < LOWER3V3 && buttons_e > LOWER3V3){
+	}else if(buttons_e < UPPER3V3 && buttons_e > LOWER3V3){
 		buttons.light = true;
 	}else if(buttons_e < UPPER2V6 && buttons_e > LOWER2V6){
 		buttons.back = true;
