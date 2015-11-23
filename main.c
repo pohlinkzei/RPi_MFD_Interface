@@ -38,7 +38,6 @@ volatile uint8_t count_3lb_max = 0xFF;
 volatile bool shutdown_irq = false;
 
 void timer1_init(void){
-	//TCCR1A |= ;
 	TCCR1B |= (1<<WGM12) | (1<<CS11) | (1<<CS10);     // CTC, XTAL / 64
 	OCR1A = (uint8_t)(XTAL / 64.0 * 1e-3 - 0.5);   // 1ms
 	TIMSK |= 1<<OCIE1A;
@@ -47,8 +46,6 @@ void timer1_init(void){
 void pi_shutdown_init(void){
 	PISTARTPDDR |= (1<<PISTART);
 	PIDDR |= (1<<PISHUTDOWN);
-	MCUCR |= /*(1<<ISC00) | */(1<<ISC01);// | (1<<ISC10) | (1<<ISC11);
-	GICR |= (1<<INT0);// | (1<<INT1);
 	pi_shutdown_count = 0;
 }
 
@@ -205,7 +202,7 @@ int main(void){
 	timer1_init();
     buttons_init();
 	pi_shutdown_init();
-	//set_sleep_mode(SLEEP_MODE_IDLE);
+	set_sleep_mode(SLEEP_MODE_IDLE);
 	ZV_count = 10;
 	USART_Init(MYUBRR);
 	sei();
@@ -251,7 +248,7 @@ int main(void){
 			buttons_active = false;
 		}
 		if(!(PISTARTPORT & (1<<PISTART))){
-			//sleep_mode();
+			sleep_mode();
 			buttons_active = true;
 		}	
 		//*/		
@@ -333,12 +330,4 @@ ISR(USART_RXC_vect){/*
 		shutdown_irq = true;
 		//mfd_active = true;
 	}*/
-}
-
-ISR(INT0_vect){
-	start_pi();
-}
-
-ISR(INT1_vect){
-	start_pi();
 }
