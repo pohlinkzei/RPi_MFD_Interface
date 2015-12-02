@@ -50,7 +50,7 @@ void pi_shutdown_init(void){
 }
 
 void pi_shutdown_task(void){
-	if(!(PISTARTPORT & (1<<PISTART))) return; // pi ausgeschaltet? dann zurück!
+	if(!(PISTARTPORT & (1<<PISTART))) return; // pi ausgeschaltet? dann zurÃ¼ck!
 	//pi herunterfahren
 	if(PIPORT & (1<<PISHUTDOWN)){
 		// pi hat shutdown signal bekommen: ist er schon aus?
@@ -68,7 +68,7 @@ void pi_shutdown_task(void){
 		if(!(PIPIN & (1<<PIREADY))){
 			uint8_t x = 0;
 			do{
-				USART_Transmit(0xFF); // MFD ausgeschaltet. Der Pi möge seine Arbeit einstellen.
+				USART_Transmit(0xFF); // MFD ausgeschaltet. Der Pi mÃ¶ge seine Arbeit einstellen.
 				_delay_ms(200);
 				x++;
 				if(x>50) break;
@@ -147,19 +147,19 @@ void uart_task(){
 	if(buttons_old.left_right){
 		int8_t c = buttons_old.left_right;
 		if(c > 0){
-			while(c--){
+			//while(c--){
 				USART_Transmit('+');
-				_delay_ms(WAIT);
-				USART_Transmit('0');
-				_delay_ms(WAIT);
-			}
+				//_delay_ms(WAIT);
+				USART_Transmit(c);
+				//_delay_ms(WAIT);
+			//}
 		}else{
-			while(c++){
+			//while(c++){
 				USART_Transmit('-');
-				_delay_ms(WAIT);
-				USART_Transmit('0');
-				_delay_ms(WAIT);
-			}							
+				//_delay_ms(WAIT);
+				USART_Transmit(c * -1);
+				//_delay_ms(WAIT);
+			//}							
 		}
 	}	
 	if(buttons_old.enter) USART_Transmit('E');
@@ -270,7 +270,7 @@ ISR(SPI_STC_vect){
 	//*
 	uint8_t data = 0xFF-SPDR;
 	SPSR &= ~(1<<SPIF);
-	if(data == (0x81) || data == 0xC1){// data == 0x56 || data == 0x53 für navi frames
+	if(data == (0x81) || data == 0xC1){// data == 0x56 || data == 0x53 fÃ¼r navi frames
 		uint8_t i = 0;
 		_delay_us(150);
 		PORT_3LB |= (1<<EN);
