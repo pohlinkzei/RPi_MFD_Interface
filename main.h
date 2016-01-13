@@ -3,7 +3,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 #ifndef F_CPU
-#define F_CPU 8000000UL
+#define F_CPU 16000000UL
 #endif
 #include <avr/io.h>
 #include <stdbool.h>
@@ -53,7 +53,6 @@
 #define PI_TEMP PA5
 
 uint8_t read_3lb(void);
-//extern void reset (void) __attribute__((noreturn));
 
 extern volatile uint16_t pi_shutdown_count;
 extern volatile uint16_t pi_start_count;

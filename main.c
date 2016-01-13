@@ -5,14 +5,6 @@
  *  Author: Hubert
  */ 
 
-/*
- * RPi_MFD_Interface.c
- *
- * Created: 30.07.2014 18:32:48
- *  Author: Hubert
- */ 
-//#define F_CPU 8000000UL
-
 #include <avr/io.h>
 #include <stdbool.h>
 #include <util/delay.h>
@@ -26,6 +18,8 @@
 
 #include "buttons.h"
 #include "rotary.h"
+
+#define WAIT 5
 
 extern volatile buttons_t buttons, buttons_old, buttons_vold;
 volatile bool mfd_active = false;
@@ -44,7 +38,6 @@ volatile uint8_t count_3lb_max = 0xFF;
 volatile bool shutdown_irq = false;
 
 void timer1_init(void){
-	//TCCR1A |= ;
 	TCCR1B |= (1<<WGM12) | (1<<CS11) | (1<<CS10);     // CTC, XTAL / 64
 	OCR1A = (uint8_t)(XTAL / 64.0 * 1e-3 - 0.5);   // 1ms
 	TIMSK |= 1<<OCIE1A;
@@ -53,13 +46,11 @@ void timer1_init(void){
 void pi_shutdown_init(void){
 	PISTARTPDDR |= (1<<PISTART);
 	PIDDR |= (1<<PISHUTDOWN);
-	MCUCR |= /*(1<<ISC00) | */(1<<ISC01);// | (1<<ISC10) | (1<<ISC11);
-	GICR |= (1<<INT0);// | (1<<INT1);
 	pi_shutdown_count = 0;
 }
 
 void pi_shutdown_task(void){
-	if(!(PISTARTPORT & (1<<PISTART))) return; // pi ausgeschaltet? dann zurück!
+	if(!(PISTARTPORT & (1<<PISTART))) return; // pi ausgeschaltet? dann zurÃ¼ck!
 	//pi herunterfahren
 	if(PIPORT & (1<<PISHUTDOWN)){
 		// pi hat shutdown signal bekommen: ist er schon aus?
@@ -116,34 +107,9 @@ void pi_cooling_task(void){
 
 void init_3lb(void){
 	spi_init(false,1,0);
-	//init int2
-//	GICR |= (1<<INT2);
-//	MCUCSR |= (1<<ISC2); //rising edge
 }
-
-uint8_t read_3lb(void){
-	
-	/*
-	spi_timeout = 0;
-	
-	while(SPI_NOT_READY){
-		spi_timeout++;
-		if(spi_timeout==100) return 0;
-	}
-	//SPDR = 0;
-	//*/
-	PORT_3LB |= (1<<EN);
-	DDR_3LB |= (1<<EN);
-	_delay_us(110);
-	PORT_3LB &= ~(1<<EN);
-	DDR_3LB &= ~(1<<EN);
-	GIFR &= ~(1<<INT2);
-	return SPDR;
-}
-
 
 void start_pi(void){
-	// starte den pi und warte (!) bis er hochgefahren ist. Blockierend.
 	if(!(PISTARTPORT & (1<<PISTART))){ 
 		cli();
 		int i = 0;
@@ -153,10 +119,6 @@ void start_pi(void){
 		for(;i<30;i++){
 			_delay_ms(1000);
 		}		
-		//while(!(PIPIN & (1<<PIACTIVE))){
-		//	if(shutdown_irq) break;
-		//}
-		//_delay_ms(200);
 		sei();
 	}	
 }
@@ -185,15 +147,20 @@ void uart_task(){
 	if(buttons_old.left_right){
 		int8_t c = buttons_old.left_right;
 		if(c > 0){
-			while(c--){
+			//while(c--){
 				USART_Transmit('+');
-				USART_Transmit('0');
-			}
+				//_delay_ms(WAIT);
+				USART_Transmit(c);
+				//_delay_ms(WAIT);
+			//}
 		}else{
-			while(c++){
+			//while(c++){
+				c *= -1:
 				USART_Transmit('-');
-				USART_Transmit('0');
-			}							
+				//_delay_ms(WAIT);
+				USART_Transmit(c);
+				//_delay_ms(WAIT);
+			//}							
 		}
 	}	
 	if(buttons_old.enter) USART_Transmit('E');
@@ -213,7 +180,7 @@ uint8_t aux_check(void){
 	// [  AUX            ] 
 	// [  AUX          TP]
 	// [  AUX    INFO  TP]
-	
+	//return AUX;
 	//if(ready_3lb){
 		if(strncmp( (char*) &data_3lb[1], "  AUX   ", 8) == 0){
 			if(strncmp( (char*) &data_3lb[9], "INFO  TP", 8) == 0){
@@ -236,17 +203,14 @@ int main(void){
 	timer1_init();
     buttons_init();
 	pi_shutdown_init();
-	//set_sleep_mode(SLEEP_MODE_IDLE);
-	//pi_cooling_init();
+	set_sleep_mode(SLEEP_MODE_IDLE);
 	ZV_count = 10;
 	USART_Init(MYUBRR);
-	//start_pi();
 	sei();
 	while(1){
-		
 		//*
 		if(buttons_active){
-			if(AMP_PIN & (1<<AMP_ON)){
+			if((AMP_PIN & (1<<AMP_ON))){
 				start_pi();
 				switch(aux_check()){
 					case AUX:{
@@ -262,30 +226,36 @@ int main(void){
 							USART_Transmit(data_3lb[i]);
 							_delay_ms(25);
 						}
-						USART_Transmit(0);
+						USART_Transmit(0x00);
 						_delay_ms(250);
 						break;
 					}
 					case AUX_INFO:{
-						USART_Transmit(0x02);
+						USART_Transmit(0x01);
 						_delay_ms(250);
 						break;
 					}
 				}
 				mfd_active = true;
-				//ZV_count = 0;
 			}else{
 				pi_shutdown_task();
+/*
+				if(ZV_PIN & (1<<ZV_ZU)){
+					pi_shutdown_task();
+				}else{
+					start_pi();
+					USART_Transmit(0x02);
+					_delay_ms(250);
+				}
+*/
 			}
 			buttons_active = false;
 		}
-		//USART_Transmit(0xFF-SPDR);
 		if(!(PISTARTPORT & (1<<PISTART))){
-			//sleep_mode();
+			sleep_mode();
 			buttons_active = true;
 		}	
-		//*/
-				
+		//*/		
     }
 	return 0;
 }
@@ -300,36 +270,21 @@ ISR(TIMER1_COMPA_vect){// 1ms Timer
 	}
 }
 
-uint8_t wait_for_SPI(uint16_t timeout_us){
-	//*
-	SPSR &= ~(1<<SPIF);
-	while(!(SPSR & (1<<SPIF)) && timeout_us > 0){
-		_delay_us(1);
-		timeout_us -= 2;	
-	}
-	//*/
-	//_delay_us(timeout_us);
-	return 0xFF - SPDR;
-}
-
 ISR(SPI_STC_vect){
 	//*
 	uint8_t data = 0xFF-SPDR;
 	SPSR &= ~(1<<SPIF);
-	if(data == (0x81) || data == 0xC1){// data == 0x56 || data == 0x53 für navi frames
+	if(data == (0x81) || data == 0xC1){// data == 0x56 || data == 0x53 fÃ¼r navi frames
 		uint8_t i = 0;
 		_delay_us(150);
 		PORT_3LB |= (1<<EN);
 		DDR_3LB |= (1<<EN);
-		//_delay_us(250);
-		
 		SPSR &= ~(1<<SPIF);
 		uint16_t timeout_us = 500;
 		while(!(SPSR & (1<<SPIF)) && timeout_us > 0){
 			_delay_us(10);
 			timeout_us -= 20;	
 		}
-		
 		data =  0xFF-SPDR;
 		_delay_us(20);
 		DDR_3LB &= ~(1<<EN);
@@ -337,28 +292,20 @@ ISR(SPI_STC_vect){
 		while(data--){
 			_delay_us(150);
 			PORT_3LB |= (1<<EN);
-			DDR_3LB |= (1<<EN);
-			//_delay_us(250);
-		
+			DDR_3LB |= (1<<EN);		
 			SPSR &= ~(1<<SPIF);
 			timeout_us = 500;
 			while(!(SPSR & (1<<SPIF)) && timeout_us > 0){
 				_delay_us(10);
 				timeout_us -= 20;	
 			}
-		
 			data_3lb[i++] =  0xFF-SPDR;
 			_delay_us(20);
 			DDR_3LB &= ~(1<<EN);
 			PORT_3LB &= ~(1<<EN);
 		}
-		
 	}else if(data == 0xC3){
-		//uint8_t myAux = aux_check();
 		if(data_3lb[1] == 0){
-		//if(myAux != AUX || myAux != AUX_INFO){
-			//#warning: "TODO: fix 3lb request timing!"
-			//_delay_ms(2);
 			PORT_3LB |= (1<<EN);
 			DDR_3LB |= (1<<EN);
 			_delay_us(3500);
@@ -371,20 +318,11 @@ ISR(SPI_STC_vect){
 			DDR_3LB &= ~(1<<EN);
 			PORT_3LB &= ~(1<<EN);
 		}
-		ready_3lb = true;
-		/*
-		uint8_t i = 0;
-		for(i=0;i<20;i++){
-			USART_Transmit(data_3lb[i]);
-		}
-		//*/
-		
+		ready_3lb = true;		
 	}else{
 		ready_3lb = false;
-		//USART_Transmit('X');
 	}
 	//*/
-	
 	DDR_3LB &= ~(1<<EN);
 	PORT_3LB &= ~(1<<EN);
 }
@@ -398,6 +336,8 @@ ISR(USART_RXC_vect){/*
 	}*/
 }
 
+
 ISR(INT0_vect){
 	start_pi();
 }
+
