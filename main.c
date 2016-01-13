@@ -238,8 +238,8 @@ int main(void){
 				}
 				mfd_active = true;
 			}else{
-				pi_shutdown_task();
-/*
+//				pi_shutdown_task();
+//*
 				if(ZV_PIN & (1<<ZV_ZU)){
 					pi_shutdown_task();
 				}else{
@@ -247,7 +247,7 @@ int main(void){
 					USART_Transmit(0x02);
 					_delay_ms(250);
 				}
-*/
+//*/
 			}
 			buttons_active = false;
 		}
