@@ -155,7 +155,7 @@ void uart_task(){
 			//}
 		}else{
 			//while(c++){
-				c *= -1:
+				c *= -1;
 				USART_Transmit('-');
 				//_delay_ms(WAIT);
 				USART_Transmit(c);
