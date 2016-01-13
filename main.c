@@ -74,29 +74,17 @@ void pi_shutdown_task(void){
 		_delay_ms(10000);//sicherheit
 	}else{
 		// pi ist an - soll jetzt abgeschaltet werden
+		if(!(PIPIN & (1<<PIREADY))){
+			uint8_t x = 0;
+			do{
+				USART_Transmit(0xFF); // MFD ausgeschaltet. Der Pi möge seine Arbeit einstellen.
+				_delay_ms(200);
+				x++;
+				if(x>50) break;
+			}while(PIPIN & (1<<PIREADY));
+		}
 		PIPORT |= (1<<PISHUTDOWN);
 	}
-	
-	// ist der pi 30s inaktiv und fertig, kann er herunter gefahren werden.
-	/*
-	if(PIPIN & (1<<PIACTIVE)) return; // wenn der pi noch aktiv ist, wird nicht heruntergefahren
-	//ab hier ist der pi inaktiv - mp3player aus (idle)
-	if(!(PIPIN & (1<<PIREADY))){ //solange der pi noch nicht fertig ist, passiert nichts
- 		pi_shutdown_count = 0;
- 		return;
-	}
-		if(pi_shutdown_count > 10000){
-			PIPORT |= (1<<PISHUTDOWN);
-			_delay_ms(10000);
-			PIPORT &= ~(1<<PISHUTDOWN);
-			while(PIPIN & (1<<PIREADY)){ // warten bis er wirklich aus ist
-				if(shutdown_irq) return;
-			}				
-			_delay_ms(10000);//sicherheit
-			PISTARTPORT &= ~(1<<PISTART);// und abschalten
-		}
-		//*/
-	//}
 }
 
 void pi_cooling_init(){
@@ -171,34 +159,6 @@ void start_pi(void){
 		//_delay_ms(200);
 		sei();
 	}	
-}
-
-void mfd_active_check(void){
-	if(!mfd_active){
-		buttons_active_count++;
-		if(buttons_active_count == 10){
-			buttons_active_count = 0;
-			if(!(PISTARTPORT & (1<<PISTART))) return;
-			/*if(ZV_count > 0){//zv hat den pi aktiviert aber das radio ist noch aus. sag dem pi, er soll warten...
-				USART_Transmit(0x02);
-				return;
-			}*/
-			uint8_t x = 0;
-			do{
-				USART_Transmit(0xFF); // MFD ausgeschaltet. Der Pi möge seine Arbeit einstellen.
-				_delay_ms(200);
-				x++;
-				if(x==0) return;
-			}while(PIPIN & (1<<PIACTIVE));						
-			return;
-		}else{
-			
-			return;
-		}
-	}else{
-		buttons_active_count = 0;					
-		start_pi();
-	}
 }
 
 void uart_task(){
@@ -316,18 +276,7 @@ int main(void){
 				//ZV_count = 0;
 			}else{
 				pi_shutdown_task();
-// 				if(ZV_PIN & (1<<ZV_ZU)){//zv ist zu. pi kann runter gefahren werden
-// 					mfd_active = false;
-// 				}else{
-// 					start_pi();
-// 					mfd_active = true;
-// 					USART_Transmit(0x02);
-// 					_delay_ms(250);
-// 				}
 			}
-			//mfd_active_check();				
-			//pi_shutdown_task();
-			
 			buttons_active = false;
 		}
 		//USART_Transmit(0xFF-SPDR);
@@ -436,21 +385,6 @@ ISR(SPI_STC_vect){
 	}
 	//*/
 	
-	//USART_Transmit(0xFF - SPDR);
-	/*
-	if(data == 0xF0){//data > 0x7F || data < 0x20){ 
-		count_3lb = 0;
-		ready_3lb = false;
-	}else if (data == 0xC3){
-		ready_3lb = true;
-		spi_init(false, 0, 0 );
-	}else{
-		data_3lb[count_3lb++] = data;
-		
-	}
-	if(count_3lb == 16) ready_3lb = true;
-	//*/
-	
 	DDR_3LB &= ~(1<<EN);
 	PORT_3LB &= ~(1<<EN);
 }
@@ -465,5 +399,5 @@ ISR(USART_RXC_vect){/*
 }
 
 ISR(INT0_vect){
-	;
+	start_pi();
 }
