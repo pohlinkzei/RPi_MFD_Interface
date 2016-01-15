@@ -24,6 +24,6 @@ void USART_Transmit( unsigned char data ){
 	;
 	/* Put data into buffer, sends the data */
 	UDR = data;
-	_delay_us(100);
+	_delay_us(10);
 }
 

@@ -19,7 +19,7 @@
 #include "buttons.h"
 #include "rotary.h"
 
-#define WAIT 5
+#define WAIT 250
 
 extern volatile buttons_t buttons, buttons_old, buttons_vold;
 volatile bool mfd_active = false;
@@ -149,17 +149,19 @@ void uart_task(){
 		if(c > 0){
 			//while(c--){
 				USART_Transmit('+');
-				//_delay_ms(WAIT);
+				_delay_us(WAIT);
 				USART_Transmit(c);
-				//_delay_ms(WAIT);
+				_delay_us(WAIT);
+				USART_Transmit('0');
 			//}
 		}else{
 			//while(c++){
 				c *= -1;
 				USART_Transmit('-');
-				//_delay_ms(WAIT);
+				_delay_us(WAIT);
 				USART_Transmit(c);
-				//_delay_ms(WAIT);
+				_delay_us(WAIT);
+				USART_Transmit('0');
 			//}							
 		}
 	}	
