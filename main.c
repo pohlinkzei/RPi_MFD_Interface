@@ -166,8 +166,18 @@ void uart_task(){
 		}
 	}	
 	if(buttons_old.enter) USART_Transmit('E');
-	if(buttons_old.traffic) USART_Transmit('v');
-	
+	if(buttons_old.traffic){ 
+		
+		if(PIPIN & (1<<PIACTIVE)){
+			PIPORT |= (1<<PISHUTDOWN);
+			_delay_ms(1000);
+			PIPORT &= ~(1<<PISHUTDOWN);
+		}else{
+			PISTARTPORT &= ~(1<<PISTART);
+			_delay_ms(1000);
+		}
+
+	}
 	if(buttons.next == false && buttons.prev == false && buttons.eject == false && buttons.tim == false && buttons.info == false && buttons.as == false && buttons.scan == false && buttons._1 == false &&	buttons._2 == false && buttons._3 == false && buttons.flag == false && buttons.light == false && buttons.navi == false && buttons.back == false && buttons.audio == false && buttons.tone == false && buttons.left_right == 0 && buttons.enter == false && buttons._4 == false && buttons._5 == false && buttons._6 == false && buttons.traffic == false){
 		USART_Transmit('0');
 	}
