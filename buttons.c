@@ -15,7 +15,8 @@ extern volatile uint8_t buttons_active_count;
 
 void buttons_init(void){
 	encode_init();
-	BUTTON_DDR &= ~(1<<BUTTON_NAVI) & ~(1<<BUTTON_VERKEHR) & ~(1<<BUTTON_INFO) & ~(1<<BUTTON_FAHNE);
+	BUTTON_DDR &= ~(1<<BUTTON_NAVI) & ~(1<<BUTTON_INFO);
+	DDRD &=  ~(1<<BUTTON_VERKEHR) & ~(1<<BUTTON_FAHNE);
 	buttons.next = false;
 	buttons.prev = false;
 	buttons.eject = false;
@@ -42,8 +43,8 @@ void buttons_init(void){
 
 void buttons_task(void){
 	uint8_t i;
-	BUTTON_PORT |= (1<<BUTTON_NAVI) | (1<<BUTTON_VERKEHR) | (1<<BUTTON_INFO) | (1<<BUTTON_FAHNE);
-	
+	BUTTON_PORT |= (1<<BUTTON_NAVI) | (1<<BUTTON_INFO);
+	PORTD |= (1<<BUTTON_VERKEHR) | (1<<BUTTON_FAHNE);
 	uint8_t buttons_c = read_adc(BUTTONS_C) >> 2;
 	
 	if(buttons_c > UPPER3V3){
@@ -168,11 +169,11 @@ void buttons_task(void){
 	
 	buttons.left_right += encode_read1();//enc_delta;
 	buttons.navi = !(BUTTON_PIN & (1<<BUTTON_NAVI));
-	buttons.traffic = !(BUTTON_PIN & (1<<BUTTON_VERKEHR));
-	buttons.flag = !(BUTTON_PIN & (1<<BUTTON_FAHNE));
+	buttons.traffic = !(PIND & (1<<BUTTON_VERKEHR));
+	buttons.flag = !(PIND & (1<<BUTTON_FAHNE));
 	buttons.info = !(BUTTON_PIN & (1<<BUTTON_INFO));
-	BUTTON_PORT &= ~(1<<BUTTON_NAVI) & ~(1<<BUTTON_VERKEHR) & ~(1<<BUTTON_INFO) & ~(1<<BUTTON_FAHNE);
-	
+	BUTTON_PORT &= ~(1<<BUTTON_NAVI) & ~(1<<BUTTON_INFO);
+	PORTD &= ~(1<<BUTTON_VERKEHR) & ~(1<<BUTTON_FAHNE);
 	
 	buttons_vold = buttons_old;
 	buttons_old = buttons;

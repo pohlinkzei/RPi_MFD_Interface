@@ -26,31 +26,23 @@
 #define PIPORT PORTB
 #define PIPIN PINB
 #define PIDDR DDRB
-#define PIACTIVE PB3
+#define PIACTIVE PB4
 #define PISHUTDOWN PB1
-#define PIREADY PB0
+#define PIREADYPORT PORTA
+#define PIREADYDDR DDRA
+#define PIREADYPIN PINA
+#define PIREADY PA5
 
 // Start Pi
 #define PISTARTPDDR DDRD
 #define PISTARTPORT PORTD
-#define PISTART PD6 
+#define PISTART PD7 
 
 #define ZV_PIN	PIND
 #define ZV_ZU	PD2
 
 #define AMP_PIN PIND
 #define AMP_ON PD3
-
-// cool Pi
-#define PWM OCR2
-#define PWM_HIGH 255
-#define PWM_MED	128
-#define PWM_LOW	64
-#define PWM_OFF 0
-#define TEMP_HIGH 350
-#define TEMP_MED 300
-#define TEMP_LOW 275
-#define PI_TEMP PA5
 
 uint8_t read_3lb(void);
 

@@ -36,11 +36,12 @@ volatile int32_t ZV_count;
 volatile bool ready_3lb = false;
 volatile uint8_t count_3lb_max = 0xFF;
 volatile bool shutdown_irq = false;
+volatile bool dont_start = false;
 
 void timer1_init(void){
 	TCCR1B |= (1<<WGM12) | (1<<CS11) | (1<<CS10);     // CTC, XTAL / 64
 	OCR1A = (uint8_t)(XTAL / 64.0 * 1e-3 - 0.5);   // 1ms
-	TIMSK |= 1<<OCIE1A;
+	TIMSK1 |= 1<<OCIE1A;
 }
 
 void pi_shutdown_init(void){
@@ -65,44 +66,17 @@ void pi_shutdown_task(void){
 		_delay_ms(10000);//sicherheit
 	}else{
 		// pi ist an - soll jetzt abgeschaltet werden
-		if(!(PIPIN & (1<<PIREADY))){
+		if(!(PIREADYPIN & (1<<PIREADY))){
 			uint8_t x = 0;
 			do{
 				USART_Transmit(0xFF); // MFD ausgeschaltet. Der Pi möge seine Arbeit einstellen.
 				_delay_ms(200);
 				x++;
 				if(x>50) break;
-			}while(PIPIN & (1<<PIREADY));
+			}while(PIREADYPIN & (1<<PIREADY));
 		}
 		PIPORT |= (1<<PISHUTDOWN);
 	}
-}
-
-void pi_cooling_init(){
-	//timer2 init
-    ASSR  = 0x00;
-    TCNT2 = 0x01;
-    OCR2 = 0xFF;
-    //TCCR2 = 0x00; 		// Einfacher Timer
-    TCCR2 |= (1<<WGM20) | (1<<COM21);	// phase-correct, non-inverted PWM
-	TCCR2 |= (1<<CS21);				
-}
-
-void pi_cooling_task(void){
-	uint16_t temperature = read_adc(PI_TEMP);
-	if(temperature > TEMP_HIGH){
-		PWM = PWM_HIGH;
-		return;
-	}
-	if(temperature > TEMP_MED){
-		PWM = PWM_MED;
-		return;
-	}
-	if(temperature >TEMP_LOW){
-		PWM = PWM_LOW;
-		return;
-	}
-	PWM = PWM_OFF;
 }
 
 void init_3lb(void){
@@ -110,6 +84,7 @@ void init_3lb(void){
 }
 
 void start_pi(void){
+	if(dont_start) return;
 	if(!(PISTARTPORT & (1<<PISTART))){ 
 		cli();
 		int i = 0;
@@ -172,9 +147,11 @@ void uart_task(){
 			PIPORT |= (1<<PISHUTDOWN);
 			_delay_ms(1000);
 			PIPORT &= ~(1<<PISHUTDOWN);
+			dont_start = true;
 		}else{
 			PISTARTPORT &= ~(1<<PISTART);
 			_delay_ms(1000);
+			dont_start = false;
 		}
 
 	}
@@ -210,6 +187,7 @@ uint8_t aux_check(void){
 	
 
 int main(void){
+	PORTB &= ~(1<<PB0);
 	adc_init();
 	init_3lb();
 	timer1_init();
@@ -264,7 +242,7 @@ int main(void){
 			buttons_active = false;
 		}
 		if(!(PISTARTPORT & (1<<PISTART))){
-			sleep_mode();
+			//sleep_mode();
 			buttons_active = true;
 		}	
 		//*/		
@@ -340,7 +318,7 @@ ISR(SPI_STC_vect){
 }
 //ISR( TIMER0_COMP_vect )// 1ms for manual movement
 
-ISR(USART_RXC_vect){/*
+ISR(USART0_RX_vect){/*
 	uint8_t data = UDR;
 	if(data == 0xFF){
 		shutdown_irq = true;

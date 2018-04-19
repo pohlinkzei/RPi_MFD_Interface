@@ -25,9 +25,10 @@ void encode_init( void )
     new ^= 1;                   // convert gray to binary
   last = new;                   // power on state
   enc_delta = 0;
-  TCCR0 = 1<<WGM01^1<<CS01^1<<CS00;     // CTC, XTAL / 64
-  OCR0 = (uint8_t)(XTAL / 64.0 * 1e-3 - 0.5);   // 1ms
-  TIMSK |= 1<<OCIE0;
+  TCCR0A = (1<<WGM01);
+  TCCR0B = (1<<CS01) | (1<<CS00);     // CTC, XTAL / 64
+  OCR0A = (uint8_t)(XTAL / 64.0 * 1e-3 - 0.5);   // 1ms
+  TIMSK0 |= 1<<OCIE0A;
 }
  
  
