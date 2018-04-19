@@ -36,6 +36,7 @@ volatile int32_t ZV_count;
 volatile bool ready_3lb = false;
 volatile uint8_t count_3lb_max = 0xFF;
 volatile bool shutdown_irq = false;
+volatile bool dont_start = false;
 
 void timer1_init(void){
 	TCCR1B |= (1<<WGM12) | (1<<CS11) | (1<<CS10);     // CTC, XTAL / 64
@@ -110,6 +111,7 @@ void init_3lb(void){
 }
 
 void start_pi(void){
+	if(dont_start) return;
 	if(!(PISTARTPORT & (1<<PISTART))){ 
 		cli();
 		int i = 0;
@@ -172,9 +174,11 @@ void uart_task(){
 			PIPORT |= (1<<PISHUTDOWN);
 			_delay_ms(1000);
 			PIPORT &= ~(1<<PISHUTDOWN);
+			dont_start = true;
 		}else{
 			PISTARTPORT &= ~(1<<PISTART);
 			_delay_ms(1000);
+			dont_start = false;
 		}
 
 	}
