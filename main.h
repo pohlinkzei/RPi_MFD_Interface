@@ -52,6 +52,8 @@
 #define TEMP_LOW 275
 #define PI_TEMP PA5
 
+#define TIMEOUT_10MIN 600 //10 min (100ms * 600)
+
 uint8_t read_3lb(void);
 
 extern volatile uint16_t pi_shutdown_count;

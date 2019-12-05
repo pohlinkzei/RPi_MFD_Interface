@@ -28,6 +28,7 @@ volatile uint16_t pi_start_count = 0;
 volatile uint8_t data_3lb[20];
 volatile bool status = false;
 uint8_t count_3lb = 0;
+volatile uint32_t no_amp_timeout;
 volatile uint32_t spi_timeout;
 volatile uint16_t mp_cnt = 0;
 volatile bool buttons_active = false;
@@ -221,12 +222,14 @@ int main(void){
 	pi_shutdown_init();
 	set_sleep_mode(SLEEP_MODE_IDLE);
 	ZV_count = 10;
+	no_amp_timeout = 0;
 	USART_Init(MYUBRR);
 	sei();
 	while(1){
 		//*
 		if(buttons_active){
 			if((AMP_PIN & (1<<AMP_ON))){
+				no_amp_timeout = 0;
 				start_pi();
 				switch(aux_check()){
 					case AUX:{
@@ -259,9 +262,15 @@ int main(void){
 				if(ZV_PIN & (1<<ZV_ZU)){
 					pi_shutdown_task();
 				}else{
-					start_pi();
-					USART_Transmit(0x02);
-					_delay_ms(250);
+					
+					if(no_amp_timeout > TIMEOUT_10MIN){
+						pi_shutdown_task();
+						no_amp_timeout = TIMEOUT_10MIN + 1;
+					}else{
+						start_pi();
+						USART_Transmit(0x02);
+						_delay_ms(250);
+					}
 				}
 //*/
 			}
@@ -281,6 +290,7 @@ ISR(TIMER1_COMPA_vect){// 1ms Timer
 	pi_shutdown_count++;
 	mp_cnt++;
 	if(mp_cnt == 100){
+		no_amp_timeout++;
 		mp_cnt = 0;
 		buttons_active = true;
 	}
